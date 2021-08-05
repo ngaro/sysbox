@@ -3,6 +3,9 @@
 #
 # Script to build shiftfs inside the flatcar dev container
 #
+# Note: the shiftfs sources are pulled from https://github.com/nestybox/shiftfs-dkms.
+# (which is a git clone of https://github.com/toby63/shiftfs-dkms.git shiftfs-k58).
+#
 
 result_dir=$1
 
@@ -29,8 +32,9 @@ target_kernel="5.10.43-flatcar"
 
 pushd .
 cd /root
-git clone -b k5.8 https://github.com/toby63/shiftfs-dkms.git shiftfs-k58
-cd shiftfs-k58
+git clone -b k5.8 https://github.com/nestybox/shiftfs-dkms
+chmod 777 shiftfs-dkms
+cd shiftfs-dkms
 sudo -u rootless ./update1
 
 # These trick the build scripts to think it's running on a flatcar kernel.
