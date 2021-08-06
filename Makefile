@@ -64,7 +64,9 @@ IMAGE_BASE_DISTRO := $(shell lsb_release -is | tr '[:upper:]' '[:lower:]')
 
 TEST_DIR := $(CURDIR)/tests
 TEST_IMAGE := sysbox-test
-TEST_IMAGE_FLATCAR := sysbox-test-flatcar:2765.2.6
+
+FLATCAR_VER := 2905.0.0
+TEST_IMAGE_FLATCAR := sysbox-test-flatcar:$(FLATCAR_VER)
 
 TEST_SYSTEMD_IMAGE := sysbox-systemd-test
 TEST_SYSTEMD_DOCKERFILE := Dockerfile.systemd.$(IMAGE_BASE_DISTRO)
@@ -175,7 +177,7 @@ DOCKER_SYSBOX_BLD_FLATCAR := docker run --privileged --rm --runtime=runc      \
 			-v $(CURDIR):$(PROJECT)                       \
 			-v $(GOPATH)/pkg/mod:/go/pkg/mod              \
 			-v $(HOME)/.gitconfig:/root/.gitconfig        \
-			sysbox-test-flatcar:2765.2.6
+			sysbox-test-flatcar:$(FLATCAR_VER)
 
 sysbox: ## Build sysbox (the build occurs inside a container, so the host is not polluted)
 sysbox: test-img
@@ -188,17 +190,6 @@ sysbox-flatcar: $(LIBSECCOMP) test-img-flatcar
 	@printf "\n** Building sysbox for Kinvolk's Flatcar OS**\n\n"
 	$(DOCKER_SYSBOX_BLD_FLATCAR) /bin/bash -c "export HOST_UID=$(HOST_UID) && \
 		export HOST_GID=$(HOST_GID) && buildContainerInit sysbox-local"
-
-sysbox-flatcar-debug: $(LIBSECCOMP) test-img-flatcar
-	@printf "\n** Building sysbox for Kinvolk's Flatcar OS**\n\n"
-	docker run -it --privileged --rm --runtime=runc      \
-			--hostname sysbox-build                       \
-			--name sysbox-build                           \
-			-e ARCH=$(ARCH)                               \
-			-v $(CURDIR):$(PROJECT)                       \
-			-v $(GOPATH)/pkg/mod:/go/pkg/mod              \
-			-v $(HOME)/.gitconfig:/root/.gitconfig        \
-			sysbox-test-flatcar:2765.2.6 /bin/bash
 
 sysbox-debug: ## Build sysbox (with debug symbols)
 sysbox-debug: test-img
@@ -589,7 +580,7 @@ test-img-flatcar: ## Build test container image for Flatcar
 test-img-flatcar:
 	@printf "\n** Building the test container for Flatcar **\n\n"
 	@cd $(TEST_DIR) && docker build -t $(TEST_IMAGE_FLATCAR) \
-		-f Dockerfile.flatcar-2765.2.6 .
+		-f Dockerfile.flatcar-$(FLATCAR_VER) .
 
 test-cleanup: ## Clean up sysbox integration tests (requires root privileges)
 test-cleanup: test-img

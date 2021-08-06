@@ -18,6 +18,15 @@ if [[ "$lastBuildHost" != "$thisHost" ]]; then
   echo "$thisHost" > .buildinfo
 fi
 
+# TODO: don't do this for FlatCar, because libseccomp is built outside the
+# container, so $lastBuildHost won't be $thisHost yet we don't want to "make
+# clean".
+
+#lastBuildHost=$(cat .buildinfo)
+#if [[ "$lastBuildHost" != "$thisHost" ]]; then
+#  make ARCH=$ARCH clean
+#fi
+
 make_target=$1
 
 distro=$(grep "^ID=" /etc/os-release | cut -d "=" -f2)
