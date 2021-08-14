@@ -28,8 +28,10 @@ if [ -f ${artifact} ]; then
 	exit 0
 fi
 
+# TODO: parametrize this, should come from top level makefile; must match exactly to the kernel on the flatcar host.
 target_kernel="5.10.43-flatcar"
 
+# TODO: automatically choose the appropriate version of the shiftfs-dkms based on the flatcar kernel
 pushd .
 cd /root
 git clone -b k5.8 https://github.com/nestybox/shiftfs-dkms
@@ -37,10 +39,13 @@ chmod 777 shiftfs-dkms
 cd shiftfs-dkms
 sudo -u rootless ./update1
 
-# These trick the build scripts to think it's running on a flatcar kernel.
+# These trick the build scripts to think it's running on a flatcar kernel
+# (rather than the kernel of the machine where the build occurs)
 sed -i "s@^KVERSION :=.*@KVERSION := $target_kernel@g" Makefile
 sed -i "s@^KDIR.*@KDIR ?= /lib/modules/$target_kernel/build@g" Makefile
-ln -s /lib/modules/5.10.43-flatcar /lib/modules/$(uname -r)
+
+ln -s /lib/modules/${target_kernel} /lib/modules/$(uname -r)
+echo "Created symlink from /lib/modules/$(uname -r) -> /lib/modules/${target_kernel}"
 
 # Build the shiftfs module
 make -f Makefile.dkms

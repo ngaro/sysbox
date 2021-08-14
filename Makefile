@@ -177,7 +177,7 @@ DOCKER_SYSBOX_BLD_FLATCAR := docker run --privileged --rm --runtime=runc      \
 			-v $(CURDIR):$(PROJECT)                       \
 			-v $(GOPATH)/pkg/mod:/go/pkg/mod              \
 			-v $(HOME)/.gitconfig:/root/.gitconfig        \
-			sysbox-test-flatcar:$(FLATCAR_VER)
+			$(TEST_IMAGE_FLATCAR)
 
 sysbox: ## Build sysbox (the build occurs inside a container, so the host is not polluted)
 sysbox: test-img
