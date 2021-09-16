@@ -65,8 +65,12 @@ IMAGE_BASE_DISTRO := $(shell lsb_release -is | tr '[:upper:]' '[:lower:]')
 TEST_DIR := $(CURDIR)/tests
 TEST_IMAGE := sysbox-test
 
-FLATCAR_VER := 2905.0.0
-TEST_IMAGE_FLATCAR := sysbox-test-flatcar:$(FLATCAR_VER)
+# Defined the desired flatcar version / kernel for which to build Sysbox and its
+# dependencies. Keep in mind that these attributes must fully match the official
+# flatcar images for the compiled binaries to be operational.
+FLATCAR_VERSION := 2905.2.3
+FLATCAR_KERNEL := 5.10.61-flatcar
+TEST_IMAGE_FLATCAR := sysbox-test-flatcar:$(FLATCAR_VERSION)
 
 TEST_SYSTEMD_IMAGE := sysbox-systemd-test
 TEST_SYSTEMD_DOCKERFILE := Dockerfile.systemd.$(IMAGE_BASE_DISTRO)
@@ -189,7 +193,8 @@ sysbox: test-img
 sysbox-flatcar: $(LIBSECCOMP) test-img-flatcar
 	@printf "\n** Building sysbox for Kinvolk's Flatcar OS**\n\n"
 	$(DOCKER_SYSBOX_BLD_FLATCAR) /bin/bash -c "export HOST_UID=$(HOST_UID) && \
-		export HOST_GID=$(HOST_GID) && buildContainerInit sysbox-local"
+		export HOST_GID=$(HOST_GID) && export FLATCAR_KERNEL=$(FLATCAR_KERNEL) && \
+		buildContainerInit sysbox-local"
 
 sysbox-debug: ## Build sysbox (with debug symbols)
 sysbox-debug: test-img
@@ -580,7 +585,7 @@ test-img-flatcar: ## Build test container image for Flatcar
 test-img-flatcar:
 	@printf "\n** Building the test container for Flatcar **\n\n"
 	@cd $(TEST_DIR) && docker build -t $(TEST_IMAGE_FLATCAR) \
-		-f Dockerfile.flatcar-$(FLATCAR_VER) .
+		-f Dockerfile.flatcar-$(FLATCAR_VERSION) .
 
 test-cleanup: ## Clean up sysbox integration tests (requires root privileges)
 test-cleanup: test-img

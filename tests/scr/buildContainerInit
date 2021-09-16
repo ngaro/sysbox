@@ -8,31 +8,24 @@ thisHost=$(hostname)-$ARCH
 
 # Build cookie (to build from scratch when necessary only)
 if [[ ! -f .buildinfo ]]; then
-  touch .buildinfo
-  chown rootless:rootless .buildinfo
+	touch .buildinfo
+	chown rootless:rootless .buildinfo
 fi
-
-lastBuildHost=$(cat .buildinfo)
-if [[ "$lastBuildHost" != "$thisHost" ]]; then
-  make ARCH=$ARCH clean
-  echo "$thisHost" > .buildinfo
-fi
-
-# TODO: don't do this for FlatCar, because libseccomp is built outside the
-# container, so $lastBuildHost won't be $thisHost yet we don't want to "make
-# clean".
-
-#lastBuildHost=$(cat .buildinfo)
-#if [[ "$lastBuildHost" != "$thisHost" ]]; then
-#  make ARCH=$ARCH clean
-#fi
 
 make_target=$1
-
 distro=$(grep "^ID=" /etc/os-release | cut -d "=" -f2)
 version=$(grep "^VERSION_ID=" /etc/os-release | cut -d "=" -f2 | tr -d '"')
-
+lastBuildHost=$(cat .buildinfo)
 bin_dir=./build/${distro}_${version}/$ARCH
+
+# Don't do this for FlatCar, because libseccomp is built outside the
+# container, so $lastBuildHost won't be $thisHost yet we don't want to "make
+# clean".
+if [[ $distro != "flatcar" ]] &&
+	[[ "$lastBuildHost" != "$thisHost" ]]; then
+	make ARCH=$ARCH clean
+	echo "$thisHost" >.buildinfo
+fi
 
 # Build sysbox
 make ARCH=$ARCH $make_target --no-print-directory
@@ -46,8 +39,8 @@ cp sysbox-mgr/build/$ARCH/sysbox-mgr ${bin_dir}
 # For Kinvolk's Flatcar OS, we also build the binaries for fusermount and
 # shiftfs (as they are not present in flatcar by default).
 if [[ $distro == "flatcar" ]]; then
-	build-fusermount ${bin_dir}
-	build-shiftfs ${bin_dir}
+	build-fusermount "${bin_dir}"
+	build-shiftfs "${bin_dir}" "${FLATCAR_KERNEL}"
 fi
 
 # Fix ownership of artifacts

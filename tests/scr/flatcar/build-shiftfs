@@ -4,13 +4,18 @@
 # Script to build shiftfs inside the flatcar dev container
 #
 # Note: the shiftfs sources are pulled from https://github.com/nestybox/shiftfs-dkms.
-# (which is a git clone of https://github.com/toby63/shiftfs-dkms.git shiftfs-k58).
+# (which is a git clone of https://github.com/toby63/shiftfs-dkms.git shiftfs-k510).
 #
 
 result_dir=$1
-
 if [ -z "$result_dir" ]; then
-	printf "Usage: $0 <result-dir>\n"
+	printf "Usage: $0 <result-dir> <target-kernel>\n"
+	exit 1
+fi
+
+target_kernel=$2
+if [ -z "$target_kernel" ]; then
+	printf "Usage: $0 <result-dir> <target-kernel>\n"
 	exit 1
 fi
 
@@ -28,13 +33,10 @@ if [ -f ${artifact} ]; then
 	exit 0
 fi
 
-# TODO: parametrize this, should come from top level makefile; must match exactly to the kernel on the flatcar host.
-target_kernel="5.10.43-flatcar"
-
 # TODO: automatically choose the appropriate version of the shiftfs-dkms based on the flatcar kernel
 pushd .
 cd /root
-git clone -b k5.8 https://github.com/nestybox/shiftfs-dkms
+git clone -b k5.10 https://github.com/toby63/shiftfs-dkms.git
 chmod 777 shiftfs-dkms
 cd shiftfs-dkms
 sudo -u rootless ./update1
@@ -59,6 +61,6 @@ mkdir -p ${result_dir}
 cp /lib/modules/${target_kernel}/kernel/fs/shiftfs.ko ${artifact}
 
 # Cleanup build dir
-rm -rf /root/shiftfs-k58
+rm -rf /root/shiftfs-dkms
 
 printf "\nshiftfs build complete (result in ${artifact}).\n"
